@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#ECECF3">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Calc 2026">
+  <meta name="description" content="Premium Neumorphic Calculator">
+  <link rel="manifest" href="manifest.json">
+  <title>Calc 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #E8E9F0;
+      --bg2: #ECECF3;
+      --shadow-light: rgba(255,255,255,0.88);
+      --shadow-dark: rgba(180,182,200,0.55);
+      --text-primary: #2D2F3E;
+      --text-secondary: #8A8CA0;
+      --accent: #E8534A;
+      --accent2: #FF6B5E;
+      --op-bg: #DFE0EA;
+      --btn-bg: #E8E9F0;
+      --display-h: 160px;
+      --radius-btn: 18px;
+      --radius-display: 28px;
+      --font: 'Outfit', sans-serif;
+      --transition: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --transition-fast: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    [data-theme="dark"] {
+      --bg: #1A1B26;
+      --bg2: #1E2030;
+      --shadow-light: rgba(255,255,255,0.05);
+      --shadow-dark: rgba(0,0,0,0.45);
+      --text-primary: #E0E2F0;
+      --text-secondary: #5A5C70;
+      --op-bg: #252638;
+      --btn-bg: #1E2030;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      height: 100%; width: 100%;
+      overflow: hidden;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text-primary);
+      transition: background 0.4s ease, color 0.4s ease;
+      -webkit-font-smoothing: antialiased;
+    }
+    .app {
+      display: flex; flex-direction: column;
+      height: 100%; max-width: 430px;
+      margin: 0 auto; padding: 10px 14px 12px;
+      position: relative; overflow: hidden;
+    }
+    /* TOP BAR */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px; padding: 0 4px;
+    }
+    .topbar-title {
+      font-size: 13px; font-weight: 600;
+      color: var(--text-secondary); letter-spacing: 1.8px; text-transform: uppercase;
+    }
+    .topbar-btns { display: flex; gap: 10px; }
+    .topbar-btn {
+      width: 32px; height: 32px; border-radius: 10px; border: none;
+      background: var(--btn-bg); cursor: pointer; display: flex; align-items: center; justify-content: center;
+      box-shadow: 4px 4px 10px var(--shadow-dark), -3px -3px 8px var(--shadow-light);
+      transition: all 0.2s var(--transition-fast); color: var(--text-secondary); font-size: 15px;
+    }
+    .topbar-btn:active { box-shadow: inset 2px 2px 6px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light); transform: scale(0.94); }
+
+    /* DISPLAY */
+    .display {
+      position: relative; border-radius: var(--radius-display);
+      background: linear-gradient(145deg, #E84040, #D63028, #C42020);
+      padding: 18px 20px 16px;
+      box-shadow:
+        10px 10px 26px rgba(220,50,40,0.32),
+        -4px -4px 12px rgba(255,120,110,0.16),
+        inset 0 1px 1px rgba(255,200,195,0.25),
+        inset 0 -2px 8px rgba(0,0,0,0.15);
+      margin-bottom: 12px;
+      flex-shrink: 0;
+      overflow: hidden;
+      min-height: var(--display-h);
+      display: flex; flex-direction: column; justify-content: flex-end;
+    }
+    .display::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 55%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.14) 0%, transparent 100%);
+      border-radius: var(--radius-display) var(--radius-display) 60% 60%;
+      pointer-events: none;
+    }
+    .display::after {
+      content: '';
+      position: absolute; bottom: -30px; right: -30px;
+      width: 140px; height: 140px;
+      background: radial-gradient(circle, rgba(255,100,80,0.25) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .display-mode-badge {
+      position: absolute; top: 12px; left: 16px;
+      font-size: 10px; font-weight: 700; letter-spacing: 2px;
+      color: rgba(255,255,255,0.45); text-transform: uppercase;
+      transition: opacity 0.3s;
+    }
+    .display-history-btn {
+      position: absolute; top: 10px; right: 14px;
+      background: rgba(255,255,255,0.15); border: none; border-radius: 8px;
+      padding: 4px 8px; color: rgba(255,255,255,0.7); font-size: 10px; font-weight: 600;
+      cursor: pointer; letter-spacing: 0.5px; font-family: var(--font);
+      backdrop-filter: blur(4px);
+      transition: background 0.2s;
+    }
+    .display-history-btn:active { background: rgba(255,255,255,0.25); }
+    .display-expr {
+      font-size: 14px; font-weight: 400; color: rgba(255,255,255,0.5);
+      text-align: right; min-height: 20px; letter-spacing: 0.3px;
+      transition: all 0.25s var(--transition-fast);
+      word-break: break-all; line-height: 1.3;
+      margin-bottom: 4px;
+    }
+    .display-result {
+      font-size: clamp(32px, 9vw, 50px); font-weight: 800;
+      color: #fff; text-align: right; letter-spacing: -1px;
+      line-height: 1; transition: all 0.3s var(--transition);
+      word-break: break-all;
+    }
+    .display-result.pop { animation: resultPop 0.35s var(--transition) forwards; }
+    @keyframes resultPop {
+      0% { transform: scale(0.88); opacity: 0.6; }
+      70% { transform: scale(1.04); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .display-cursor {
+      display: inline-block; width: 3px; height: 0.85em;
+      background: rgba(255,255,255,0.7); border-radius: 2px;
+      margin-left: 3px; vertical-align: middle;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* KEYPAD */
+    .keypad { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+    .row { display: flex; gap: 8px; flex: 1; }
+
+    /* BUTTON BASE */
+    .btn {
+      flex: 1; border: none; outline: none; cursor: pointer;
+      border-radius: var(--radius-btn);
+      background: var(--btn-bg);
+      color: var(--text-primary);
+      font-family: var(--font); font-size: 19px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 5px 5px 13px var(--shadow-dark), -3px -3px 9px var(--shadow-light);
+      transition: all 0.18s var(--transition-fast);
+      position: relative; overflow: hidden;
+      min-height: 54px; user-select: none;
+      -webkit-user-select: none;
+    }
+    .btn::after {
+      content: ''; position: absolute; inset: 0; border-radius: inherit;
+      background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0) 0%, transparent 100%);
+      transition: background 0.3s;
+    }
+    .btn:active, .btn.pressed {
+      box-shadow: inset 4px 4px 10px var(--shadow-dark), inset -3px -3px 8px var(--shadow-light);
+      transform: scale(0.95);
+    }
+    .btn:active::after {
+      background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.08) 0%, transparent 70%);
+    }
+    /* Operator buttons */
+    .btn.op {
+      background: var(--op-bg); font-size: 18px;
+      color: var(--text-secondary);
+    }
+    /* Clear button */
+    .btn.clear { color: var(--accent); font-size: 16px; font-weight: 700; }
+    /* Backspace */
+    .btn.back { font-size: 16px; color: var(--text-secondary); }
+    /* Equals */
+    .btn.eq {
+      background: linear-gradient(145deg, #E84040, #C82020);
+      color: #fff; font-size: 22px;
+      box-shadow: 5px 5px 18px rgba(220,40,30,0.4), -3px -3px 9px rgba(255,120,110,0.2),
+                  inset 0 1px 1px rgba(255,180,175,0.2);
+      flex: 2; letter-spacing: -0.5px;
+    }
+    .btn.eq:active {
+      box-shadow: inset 4px 4px 12px rgba(150,10,10,0.4), inset -3px -3px 8px rgba(255,130,120,0.15);
+      transform: scale(0.95);
+    }
+    /* Dot */
+    .btn.dot { font-size: 22px; font-weight: 800; color: var(--text-secondary); }
+    /* Sci mode */
+    .btn.sci { font-size: 12px; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.3px; }
+    /* Ripple */
+    .ripple {
+      position: absolute; border-radius: 50%;
+      background: rgba(255,255,255,0.22); pointer-events: none;
+      transform: scale(0); animation: rippleAnim 0.5s ease-out forwards;
+    }
+    @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+
+    /* HISTORY PANEL */
+    .history-panel {
+      position: absolute; inset: 0; z-index: 100;
+      background: var(--bg2);
+      border-radius: 28px;
+      padding: 24px 20px;
+      transform: translateY(100%);
+      transition: transform 0.4s var(--transition);
+      display: flex; flex-direction: column;
+    }
+    .history-panel.open { transform: translateY(0); }
+    .history-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .history-title { font-size: 18px; font-weight: 700; }
+    .history-close {
+      width: 34px; height: 34px; border-radius: 11px; border: none;
+      background: var(--btn-bg); cursor: pointer;
+      box-shadow: 3px 3px 8px var(--shadow-dark), -2px -2px 6px var(--shadow-light);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-secondary); font-size: 16px; font-family: var(--font);
+    }
+    .history-clear {
+      font-size: 12px; font-weight: 600; color: var(--accent); border: none;
+      background: none; cursor: pointer; font-family: var(--font); padding: 4px 0;
+    }
+    .history-list { flex: 1; overflow-y: auto; }
+    .history-item {
+      padding: 14px 16px; border-radius: 16px;
+      background: var(--btn-bg);
+      box-shadow: 3px 3px 8px var(--shadow-dark), -2px -2px 6px var(--shadow-light);
+      margin-bottom: 10px; cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .history-item:active { transform: scale(0.97); }
+    .history-item-expr { font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; }
+    .history-item-result { font-size: 22px; font-weight: 700; color: var(--text-primary); }
+    .history-empty { text-align: center; color: var(--text-secondary); font-size: 14px; padding-top: 40px; }
+
+    /* SCIENTIFIC ROW */
+    .sci-row {
+      display: flex; gap: 6px;
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.35s var(--transition-fast), opacity 0.3s;
+      opacity: 0;
+    }
+    .sci-row.visible { max-height: 60px; opacity: 1; }
+    .btn.sci-fn {
+      flex: 1; font-size: 11px; font-weight: 700;
+      min-height: 44px; color: var(--text-secondary);
+      letter-spacing: 0.2px;
+    }
+
+    /* THEME TOGGLE */
+    .theme-icon { font-size: 16px; transition: transform 0.5s; }
+    [data-theme="dark"] .theme-icon { transform: rotate(180deg); }
+
+    /* SCROLL HINT */
+    .display-swipe-hint {
+      position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+      width: 32px; height: 3px; border-radius: 2px;
+      background: rgba(255,255,255,0.25);
+    }
+  </style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="topbar">
+    <span class="topbar-title">Calculator</span>
+    <div class="topbar-btns">
+      <button class="topbar-btn" id="sciToggle" title="Scientific mode">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4M18 12h4M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+      </button>
+      <button class="topbar-btn" id="themeToggle" title="Toggle theme">
+        <span class="theme-icon">☀️</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="display" id="display">
+    <span class="display-mode-badge" id="modeBadge">BASIC</span>
+    <button class="display-history-btn" id="historyBtn">History ›</button>
+    <div class="display-expr" id="expr"></div>
+    <div class="display-result" id="result">0<span class="display-cursor"></span></div>
+    <div class="display-swipe-hint"></div>
+  </div>
+
+  <div class="keypad" id="keypad">
+    <div class="sci-row" id="sciRow">
+      <button class="btn sci-fn" data-sci="sin">sin</button>
+      <button class="btn sci-fn" data-sci="cos">cos</button>
+      <button class="btn sci-fn" data-sci="tan">tan</button>
+      <button class="btn sci-fn" data-sci="sqrt">√</button>
+      <button class="btn sci-fn" data-sci="log">log</button>
+      <button class="btn sci-fn" data-sci="pow2">x²</button>
+    </div>
+    <div class="row">
+      <button class="btn clear" data-val="C">C</button>
+      <button class="btn sci" data-val="+/-">±</button>
+      <button class="btn sci" data-val="%">%</button>
+      <button class="btn op" data-val="÷">÷</button>
+    </div>
+    <div class="row">
+      <button class="btn" data-val="7">7</button>
+      <button class="btn" data-val="8">8</button>
+      <button class="btn" data-val="9">9</button>
+      <button class="btn op" data-val="×">×</button>
+    </div>
+    <div class="row">
+      <button class="btn" data-val="4">4</button>
+      <button class="btn" data-val="5">5</button>
+      <button class="btn" data-val="6">6</button>
+      <button class="btn op" data-val="−">−</button>
+    </div>
+    <div class="row">
+      <button class="btn" data-val="1">1</button>
+      <button class="btn" data-val="2">2</button>
+      <button class="btn" data-val="3">3</button>
+      <button class="btn op" data-val="+">+</button>
+    </div>
+    <div class="row">
+      <button class="btn dot" data-val=",">.</button>
+      <button class="btn" data-val="0">0</button>
+      <button class="btn back" data-val="⌫">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="13" y2="14"/><line x1="13" y1="9" x2="18" y2="14"/></svg>
+      </button>
+      <button class="btn eq" data-val="=">=</button>
+    </div>
+  </div>
+
+  <!-- History Panel -->
+  <div class="history-panel" id="historyPanel">
+    <div class="history-header">
+      <span class="history-title">History</span>
+      <div style="display:flex;gap:14px;align-items:center">
+        <button class="history-clear" id="historyClear">Clear all</button>
+        <button class="history-close" id="historyClose">✕</button>
+      </div>
+    </div>
+    <div class="history-list" id="historyList"></div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+  const STORAGE_KEY = 'calc2026_state';
+  const HISTORY_KEY = 'calc2026_history';
+
+  let state = {
+    current: '0',
+    expression: '',
+    operator: null,
+    operand: null,
+    justCalc: false,
+    sciMode: false,
+    theme: 'light'
+  };
+
+  let history = [];
+
+  // Load saved state
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) Object.assign(state, JSON.parse(saved));
+    const savedH = localStorage.getItem(HISTORY_KEY);
+    if (savedH) history = JSON.parse(savedH);
+  } catch(e) {}
+
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    } catch(e) {}
+  }
+
+  const $result = document.getElementById('result');
+  const $expr = document.getElementById('expr');
+  const $app = document.getElementById('app');
+  const $sciRow = document.getElementById('sciRow');
+  const $modeBadge = document.getElementById('modeBadge');
+
+  function applyTheme() {
+    $app.setAttribute('data-theme', state.theme);
+    document.querySelector('.theme-icon').textContent = state.theme === 'dark' ? '🌙' : '☀️';
+  }
+
+  function formatNum(n) {
+    if (n === '' || n === '-') return n;
+    const num = parseFloat(n);
+    if (isNaN(num)) return n;
+    if (Math.abs(num) >= 1e12 || (Math.abs(num) < 1e-7 && num !== 0)) {
+      return num.toExponential(4);
+    }
+    const str = parseFloat(num.toPrecision(12)).toString();
+    return str;
+  }
+
+  function render(pop = false) {
+    const display = formatNum(state.current);
+    // Truncate for display
+    let shown = display;
+    if (shown.length > 12) shown = shown.slice(0, 12) + '…';
+    $result.innerHTML = shown + '<span class="display-cursor"></span>';
+    $expr.textContent = state.expression;
+    if (pop) {
+      $result.classList.remove('pop');
+      void $result.offsetWidth;
+      $result.classList.add('pop');
+    }
+  }
+
+  function addHistory(expr, result) {
+    history.unshift({ expr, result, time: Date.now() });
+    if (history.length > 50) history = history.slice(0, 50);
+    save();
+  }
+
+  function toFloat(s) {
+    return parseFloat(s.replace(',', '.'));
+  }
+
+  function calc(a, op, b) {
+    a = toFloat(a); b = toFloat(b);
+    switch(op) {
+      case '+': return a + b;
+      case '−': return a - b;
+      case '×': return a * b;
+      case '÷': return b === 0 ? 'Error' : a / b;
+      default: return b;
+    }
+  }
+
+  function handleVal(v) {
+    if (v === 'C') {
+      state.current = '0'; state.expression = '';
+      state.operator = null; state.operand = null; state.justCalc = false;
+      render(); save(); return;
+    }
+    if (v === '⌫') {
+      if (state.justCalc) { state.current = '0'; state.justCalc = false; render(); save(); return; }
+      if (state.current.length <= 1 || state.current === 'Error') { state.current = '0'; }
+      else { state.current = state.current.slice(0, -1); }
+      render(); save(); return;
+    }
+    if (v === '+/-') {
+      if (state.current !== '0') {
+        state.current = state.current.startsWith('-') ? state.current.slice(1) : '-' + state.current;
+        render(); save();
+      }
+      return;
+    }
+    if (v === '%') {
+      const n = toFloat(state.current);
+      state.current = String(n / 100);
+      render(true); save(); return;
+    }
+    if (['+','−','×','÷'].includes(v)) {
+      if (state.operator && !state.justCalc) {
+        const res = calc(state.operand, state.operator, state.current);
+        state.operand = String(res); state.current = String(res);
+      } else {
+        state.operand = state.current;
+      }
+      state.operator = v;
+      state.expression = formatNum(state.operand) + ' ' + v;
+      state.justCalc = false;
+      render(); save(); return;
+    }
+    if (v === '=') {
+      if (!state.operator) return;
+      const expr = state.expression + ' ' + state.current;
+      const res = calc(state.operand, state.operator, state.current);
+      const resStr = res === 'Error' ? 'Error' : formatNum(String(res));
+      addHistory(expr, resStr);
+      state.expression = expr + ' =';
+      state.current = resStr;
+      state.operator = null; state.operand = null; state.justCalc = true;
+      render(true); save(); return;
+    }
+    // Digits / comma
+    if (state.justCalc && /[\d,]/.test(v)) {
+      state.current = '0'; state.expression = ''; state.justCalc = false;
+    }
+    if (v === ',') {
+      if (!state.current.includes('.') && !state.current.includes(',')) {
+        state.current += '.';
+      }
+      render(); save(); return;
+    }
+    if (state.current === '0' || state.current === 'Error') {
+      state.current = v === '0' ? '0' : v;
+    } else {
+      if (state.current.replace('.','').replace('-','').length < 12) {
+        state.current += v;
+      }
+    }
+    render(); save();
+  }
+
+  function handleSci(fn) {
+    const n = toFloat(state.current);
+    let res;
+    switch(fn) {
+      case 'sin': res = Math.sin(n * Math.PI / 180); break;
+      case 'cos': res = Math.cos(n * Math.PI / 180); break;
+      case 'tan': res = Math.tan(n * Math.PI / 180); break;
+      case 'sqrt': res = n < 0 ? 'Error' : Math.sqrt(n); break;
+      case 'log': res = n <= 0 ? 'Error' : Math.log10(n); break;
+      case 'pow2': res = n * n; break;
+    }
+    const resStr = res === 'Error' ? 'Error' : formatNum(String(parseFloat(res.toPrecision(10))));
+    const expr = fn + '(' + state.current + ')';
+    addHistory(expr, resStr);
+    state.expression = expr + ' =';
+    state.current = resStr;
+    state.justCalc = true;
+    render(true); save();
+  }
+
+  // Button clicks
+  document.getElementById('keypad').addEventListener('click', function(e) {
+    const btn = e.target.closest('[data-val]');
+    if (!btn) return;
+    createRipple(e, btn);
+    handleVal(btn.dataset.val);
+    if (navigator.vibrate) navigator.vibrate(8);
+  });
+
+  document.getElementById('keypad').addEventListener('click', function(e) {
+    const btn = e.target.closest('[data-sci]');
+    if (!btn) return;
+    handleSci(btn.dataset.sci);
+    if (navigator.vibrate) navigator.vibrate(8);
+  });
+
+  // Ripple
+  function createRipple(e, el) {
+    const r = document.createElement('div');
+    r.className = 'ripple';
+    const rect = el.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = (e.clientX || rect.left + rect.width/2) - rect.left - size/2;
+    const y = (e.clientY || rect.top + rect.height/2) - rect.top - size/2;
+    r.style.cssText = `width:${size}px;height:${size}px;left:${x}px;top:${y}px`;
+    el.appendChild(r);
+    r.addEventListener('animationend', () => r.remove());
+  }
+
+  // Keyboard support
+  document.addEventListener('keydown', function(e) {
+    const map = {
+      '0':'0','1':'1','2':'2','3':'3','4':'4','5':'5','6':'6','7':'7','8':'8','9':'9',
+      '+':'+','-':'−','*':'×','/':'÷',',':',','.':',',
+      'Enter':'=','=':'=','Backspace':'⌫','Escape':'C','%':'%'
+    };
+    if (map[e.key]) { e.preventDefault(); handleVal(map[e.key]); }
+  });
+
+  // Theme toggle
+  document.getElementById('themeToggle').addEventListener('click', function() {
+    state.theme = state.theme === 'light' ? 'dark' : 'light';
+    applyTheme(); save();
+  });
+
+  // Sci toggle
+  document.getElementById('sciToggle').addEventListener('click', function() {
+    state.sciMode = !state.sciMode;
+    $sciRow.classList.toggle('visible', state.sciMode);
+    $modeBadge.textContent = state.sciMode ? 'SCIENTIFIC' : 'BASIC';
+    save();
+  });
+
+  // History
+  function renderHistory() {
+    const list = document.getElementById('historyList');
+    if (!history.length) {
+      list.innerHTML = '<div class="history-empty">Nema istorije računanja</div>';
+      return;
+    }
+    list.innerHTML = history.map((h,i) => `
+      <div class="history-item" data-idx="${i}">
+        <div class="history-item-expr">${h.expr}</div>
+        <div class="history-item-result">${h.result}</div>
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('historyBtn').addEventListener('click', function() {
+    renderHistory();
+    document.getElementById('historyPanel').classList.add('open');
+  });
+  document.getElementById('historyClose').addEventListener('click', function() {
+    document.getElementById('historyPanel').classList.remove('open');
+  });
+  document.getElementById('historyClear').addEventListener('click', function() {
+    history = []; save(); renderHistory();
+  });
+  document.getElementById('historyList').addEventListener('click', function(e) {
+    const item = e.target.closest('.history-item');
+    if (!item) return;
+    const h = history[item.dataset.idx];
+    if (h) {
+      state.current = h.result; state.expression = h.expr;
+      state.justCalc = true; render(true);
+      document.getElementById('historyPanel').classList.remove('open');
+    }
+  });
+
+  // Swipe to clear on display
+  let touchStartX = 0;
+  document.getElementById('display').addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, {passive:true});
+  document.getElementById('display').addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 60) { handleVal('⌫'); if (navigator.vibrate) navigator.vibrate(15); }
+  }, {passive:true});
+
+  // Init
+  applyTheme();
+  if (state.sciMode) { $sciRow.classList.add('visible'); $modeBadge.textContent = 'SCIENTIFIC'; }
+  render();
+
+  // Service Worker registration
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+})();
+</script>
+</body>
+</html>
