@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#EAEAF0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Calcul">
+<meta name="description" content="Premium Neumorphism Calculator">
+<title>Calcul — Premium Calculator</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #EAEAF0;
+    --shadow-light: #ffffff;
+    --shadow-dark: #C8C8D4;
+    --shadow-md: 8px 8px 20px var(--shadow-dark), -6px -6px 16px var(--shadow-light);
+    --shadow-inset: inset 4px 4px 10px var(--shadow-dark), inset -4px -4px 10px var(--shadow-light);
+    --shadow-sm: 4px 4px 12px var(--shadow-dark), -3px -3px 10px var(--shadow-light);
+    --text-primary: #2C2C3E;
+    --text-secondary: #8888A0;
+    --text-muted: #ABABC0;
+    --accent: #FF3B5C;
+    --accent-2: #FF6B35;
+    --operator-bg: #E2E2EC;
+    --equals-bg: linear-gradient(135deg, #FF3B5C 0%, #FF6B35 100%);
+    --display-bg: linear-gradient(145deg, #FF3B5C 0%, #E8304F 40%, #C8283F 100%);
+    --font: 'Outfit', sans-serif;
+    --radius-btn: 22px;
+    --radius-display: 36px;
+    --transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+    --transition-fast: all 0.12s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  [data-theme="dark"] {
+    --bg: #1E1E2A;
+    --shadow-light: #2A2A3A;
+    --shadow-dark: #14141E;
+    --text-primary: #E8E8F0;
+    --text-secondary: #6666808;
+    --text-muted: #44445A;
+    --operator-bg: #252532;
+    --display-bg: linear-gradient(145deg, #C8283F 0%, #B02235 40%, #901825 100%);
+  }
+
+  * {
+    margin: 0; padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transition: background 0.4s ease;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 430px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 0 20px 28px;
+    padding-top: max(env(safe-area-inset-top, 0px), 48px);
+    gap: 20px;
+    position: relative;
+  }
+
+  /* TOP BAR */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 4px;
+  }
+
+  .app-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .topbar-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .icon-btn {
+    width: 38px; height: 38px;
+    border-radius: 12px;
+    background: var(--bg);
+    border: none;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+    color: var(--text-secondary);
+    font-size: 16px;
+    outline: none;
+  }
+
+  .icon-btn:active {
+    box-shadow: var(--shadow-inset);
+    transform: scale(0.92);
+  }
+
+  /* DISPLAY */
+  .display {
+    background: var(--display-bg);
+    border-radius: var(--radius-display);
+    padding: 32px 32px 28px;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-end;
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+      12px 18px 40px rgba(255, 59, 92, 0.35),
+      -4px -4px 20px rgba(255, 255, 255, 0.15),
+      inset 0 1px 0 rgba(255,255,255,0.18),
+      inset 0 -1px 0 rgba(0,0,0,0.08);
+  }
+
+  .display::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 55%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 100%);
+    border-radius: var(--radius-display) var(--radius-display) 50% 50%;
+    pointer-events: none;
+  }
+
+  .display::after {
+    content: '';
+    position: absolute;
+    bottom: -40%; right: -10%;
+    width: 280px; height: 280px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .display-expression {
+    font-size: 17px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.03em;
+    min-height: 24px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-bottom: 8px;
+    transition: all 0.22s ease;
+    text-align: right;
+  }
+
+  .display-result {
+    font-size: 64px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    text-shadow: 0 4px 24px rgba(0,0,0,0.2);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: right;
+  }
+
+  .display-result.animate-in {
+    animation: resultPop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  @keyframes resultPop {
+    0% { transform: scale(0.88); opacity: 0.6; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* MODE TABS */
+  .mode-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 0 2px;
+  }
+
+  .mode-tab {
+    flex: 1;
+    height: 40px;
+    border-radius: 14px;
+    background: var(--bg);
+    border: none;
+    cursor: pointer;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+    letter-spacing: 0.04em;
+    outline: none;
+  }
+
+  .mode-tab.active {
+    box-shadow: var(--shadow-inset);
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* KEYPAD */
+  .keypad {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    flex: 1;
+  }
+
+  .scientific-keypad {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+
+  .sci-btn {
+    height: 48px;
+    border-radius: 16px;
+    background: var(--bg);
+    border: none;
+    cursor: pointer;
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    box-shadow: 3px 3px 8px var(--shadow-dark), -2px -2px 6px var(--shadow-light);
+    transition: var(--transition);
+    letter-spacing: 0.02em;
+    outline: none;
+  }
+
+  .sci-btn:active {
+    box-shadow: inset 2px 2px 6px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
+    transform: scale(0.93);
+    color: var(--accent);
+  }
+
+  .btn {
+    height: 78px;
+    border-radius: var(--radius-btn);
+    background: var(--bg);
+    border: none;
+    cursor: pointer;
+    font-family: var(--font);
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--text-primary);
+    box-shadow: var(--shadow-md);
+    transition: var(--transition);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    outline: none;
+    overflow: hidden;
+  }
+
+  .btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.08) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    pointer-events: none;
+  }
+
+  .btn:active::after { opacity: 1; }
+
+  .btn:active {
+    box-shadow: var(--shadow-inset);
+    transform: scale(0.92);
+    color: var(--accent);
+  }
+
+  .btn.operator {
+    color: var(--accent);
+    font-size: 22px;
+    font-weight: 400;
+    background: var(--operator-bg);
+    box-shadow: 6px 6px 16px var(--shadow-dark), -4px -4px 12px var(--shadow-light);
+  }
+
+  .btn.operator:active {
+    box-shadow: inset 3px 3px 8px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+    color: var(--accent-2);
+  }
+
+  .btn.clear {
+    color: var(--accent);
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    background: var(--operator-bg);
+  }
+
+  .btn.backspace {
+    font-size: 20px;
+    color: var(--text-secondary);
+    background: var(--operator-bg);
+  }
+
+  .btn.equals {
+    background: var(--equals-bg);
+    color: white;
+    font-size: 28px;
+    font-weight: 400;
+    box-shadow:
+      8px 10px 28px rgba(255, 59, 92, 0.4),
+      -4px -4px 14px rgba(255, 255, 255, 0.25),
+      inset 0 1px 0 rgba(255,255,255,0.2);
+    grid-column: span 2;
+  }
+
+  .btn.equals:active {
+    box-shadow:
+      inset 4px 4px 12px rgba(0,0,0,0.2),
+      inset -2px -2px 8px rgba(255,255,255,0.1);
+    transform: scale(0.93);
+  }
+
+  .btn.zero {
+    grid-column: span 1;
+    font-size: 24px;
+  }
+
+  .btn.dot {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-secondary);
+  }
+
+  /* HISTORY PANEL */
+  .history-panel {
+    position: absolute;
+    inset: 0;
+    background: var(--bg);
+    border-radius: 0;
+    padding: max(env(safe-area-inset-top, 0px), 48px) 20px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    transform: translateX(100%);
+    transition: transform 0.38s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    z-index: 100;
+    overflow-y: auto;
+  }
+
+  .history-panel.open {
+    transform: translateX(0);
+  }
+
+  .history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .history-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .history-clear-btn {
+    padding: 8px 16px;
+    border-radius: 12px;
+    background: var(--bg);
+    border: none;
+    cursor: pointer;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+    outline: none;
+  }
+
+  .history-clear-btn:active { box-shadow: var(--shadow-inset); transform: scale(0.93); }
+
+  .history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .history-item {
+    background: var(--bg);
+    border-radius: 20px;
+    padding: 16px 20px;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: right;
+  }
+
+  .history-item:active { box-shadow: var(--shadow-inset); transform: scale(0.97); }
+
+  .history-expr {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+
+  .history-res {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+  }
+
+  .history-empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 16px;
+    font-weight: 400;
+    padding: 60px 0;
+    line-height: 1.7;
+  }
+
+  .history-empty-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.4;
+    display: block;
+  }
+
+  /* INSTALL BANNER */
+  .install-banner {
+    position: fixed;
+    bottom: 24px;
+    left: 20px; right: 20px;
+    max-width: 390px;
+    margin: 0 auto;
+    background: var(--bg);
+    border-radius: 24px;
+    padding: 16px 20px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.15), var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    z-index: 200;
+    transform: translateY(120px);
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    opacity: 0;
+  }
+
+  .install-banner.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .install-icon {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    background: var(--equals-bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+    box-shadow: 4px 6px 16px rgba(255,59,92,0.3);
+  }
+
+  .install-text { flex: 1; }
+  .install-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+  .install-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+  .install-actions { display: flex; gap: 8px; }
+
+  .install-btn {
+    padding: 8px 16px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 600;
+    transition: var(--transition);
+    outline: none;
+  }
+
+  .install-btn.primary {
+    background: var(--equals-bg);
+    color: white;
+    box-shadow: 0 4px 12px rgba(255,59,92,0.3);
+  }
+
+  .install-btn.secondary {
+    background: var(--bg);
+    color: var(--text-secondary);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .install-btn:active { transform: scale(0.93); }
+
+  /* RIPPLE */
+  .ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,59,92,0.15);
+    transform: scale(0);
+    animation: rippleEffect 0.5s linear;
+    pointer-events: none;
+  }
+
+  @keyframes rippleEffect {
+    to { transform: scale(3); opacity: 0; }
+  }
+
+  /* DARK MODE TRANSITION */
+  * { transition-property: background, color, box-shadow, border-color; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 0; }
+
+  /* MEDIA */
+  @media (max-height: 700px) {
+    .btn { height: 64px; }
+    .keypad { gap: 10px; }
+    .display { min-height: 150px; padding: 24px 24px 20px; }
+    .display-result { font-size: 52px; }
+  }
+
+  @media (min-height: 850px) {
+    .btn { height: 88px; }
+    .keypad { gap: 16px; }
+  }
+
+  /* SPLASH / LOADER */
+  .splash {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+
+  .splash.hide {
+    opacity: 0;
+    transform: scale(1.05);
+    pointer-events: none;
+  }
+
+  .splash-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .splash-logo {
+    width: 80px; height: 80px;
+    border-radius: 24px;
+    background: var(--equals-bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 38px;
+    box-shadow: 0 12px 40px rgba(255,59,92,0.4);
+    animation: splashPulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes splashPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 12px 40px rgba(255,59,92,0.4); }
+    50% { transform: scale(1.06); box-shadow: 0 16px 48px rgba(255,59,92,0.55); }
+  }
+
+  .splash-name {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+  }
+
+  .splash-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: -12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<!-- Splash Screen -->
+<div class="splash" id="splash">
+  <div class="splash-content">
+    <div class="splash-logo">◈</div>
+    <div>
+      <div class="splash-name">Calcul</div>
+      <div class="splash-sub">Premium Calculator</div>
+    </div>
+  </div>
+</div>
+
+<!-- Main App -->
+<div class="app" id="app">
+
+  <div class="topbar">
+    <span class="app-title">Calcul</span>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="historyBtn" title="History">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="12 8 12 12 14 14"></polyline>
+          <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"></path>
+        </svg>
+      </button>
+      <button class="icon-btn" id="themeBtn" title="Toggle theme">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="themeIcon">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Display -->
+  <div class="display" id="display">
+    <div class="display-expression" id="expression">0</div>
+    <div class="display-result" id="result">0</div>
+  </div>
+
+  <!-- Mode Tabs -->
+  <div class="mode-tabs">
+    <button class="mode-tab active" id="basicTab" onclick="switchMode('basic')">Basic</button>
+    <button class="mode-tab" id="sciTab" onclick="switchMode('sci')">Scientific</button>
+  </div>
+
+  <!-- Scientific Keypad (hidden by default) -->
+  <div class="scientific-keypad" id="sciKeypad" style="display:none;">
+    <button class="sci-btn" onclick="sciInput('Math.sin(')">sin</button>
+    <button class="sci-btn" onclick="sciInput('Math.cos(')">cos</button>
+    <button class="sci-btn" onclick="sciInput('Math.tan(')">tan</button>
+    <button class="sci-btn" onclick="sciInput('Math.PI')">π</button>
+    <button class="sci-btn" onclick="sciInput('Math.log(')">log</button>
+    <button class="sci-btn" onclick="sciInput('Math.log2(')">log₂</button>
+    <button class="sci-btn" onclick="sciInput('Math.sqrt(')">√</button>
+    <button class="sci-btn" onclick="sciInput('**2')">x²</button>
+    <button class="sci-btn" onclick="sciInput('Math.pow(')">xʸ</button>
+    <button class="sci-btn" onclick="sciInput('Math.abs(')">|x|</button>
+    <button class="sci-btn" onclick="sciInput('Math.E')">e</button>
+    <button class="sci-btn" onclick="sciInput('(')">( )</button>
+  </div>
+
+  <!-- Main Keypad -->
+  <div class="keypad" id="keypad">
+    <button class="btn clear" onclick="clearAll()">AC</button>
+    <button class="btn backspace operator" onclick="backspace()">⌫</button>
+    <button class="btn operator" onclick="input('%')">%</button>
+    <button class="btn operator" onclick="input('/')">÷</button>
+
+    <button class="btn" onclick="input('7')">7</button>
+    <button class="btn" onclick="input('8')">8</button>
+    <button class="btn" onclick="input('9')">9</button>
+    <button class="btn operator" onclick="input('*')">×</button>
+
+    <button class="btn" onclick="input('4')">4</button>
+    <button class="btn" onclick="input('5')">5</button>
+    <button class="btn" onclick="input('6')">6</button>
+    <button class="btn operator" onclick="input('-')">−</button>
+
+    <button class="btn" onclick="input('1')">1</button>
+    <button class="btn" onclick="input('2')">2</button>
+    <button class="btn" onclick="input('3')">3</button>
+    <button class="btn operator" onclick="input('+')">+</button>
+
+    <button class="btn zero" onclick="input('0')">0</button>
+    <button class="btn dot" onclick="input('.')">.</button>
+    <button class="btn equals" onclick="calculate()">=</button>
+  </div>
+
+</div>
+
+<!-- History Panel -->
+<div class="history-panel" id="historyPanel">
+  <div class="history-header">
+    <span class="history-title">History</span>
+    <button class="history-clear-btn" onclick="clearHistory()">Clear all</button>
+  </div>
+  <div class="history-list" id="historyList"></div>
+</div>
+
+<!-- Install Banner -->
+<div class="install-banner" id="installBanner">
+  <div class="install-icon">◈</div>
+  <div class="install-text">
+    <div class="install-title">Install Calcul</div>
+    <div class="install-sub">Add to home screen for offline use</div>
+  </div>
+  <div class="install-actions">
+    <button class="install-btn secondary" id="dismissInstall">Later</button>
+    <button class="install-btn primary" id="installBtn">Install</button>
+  </div>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────
+let expression = '';
+let hasResult = false;
+let history = [];
+let isDark = false;
+let currentMode = 'basic';
+let deferredPrompt = null;
+
+// ── INIT ────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  loadState();
+  setTimeout(() => {
+    document.getElementById('splash').classList.add('hide');
+  }, 1200);
+  updateDisplay();
+});
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('calcul_state');
+    if (saved) {
+      const state = JSON.parse(saved);
+      expression = state.expression || '';
+      history = state.history || [];
+      isDark = state.isDark || false;
+      if (isDark) applyTheme(true, false);
+    }
+  } catch(e) {}
+}
+
+function saveState() {
+  try {
+    localStorage.setItem('calcul_state', JSON.stringify({
+      expression, history, isDark
+    }));
+  } catch(e) {}
+}
+
+// ── CORE LOGIC ──────────────────────────────────────────────────
+function input(val) {
+  const operators = ['+', '-', '*', '/', '%'];
+  const lastChar = expression.slice(-1);
+  const isOperator = operators.includes(val);
+  const lastIsOperator = operators.includes(lastChar);
+
+  if (hasResult && !isOperator) {
+    expression = '';
+  }
+  hasResult = false;
+
+  if (val === '.' && lastChar === '.') return;
+  if (val === '.' && (lastIsOperator || expression === '')) {
+    expression += '0.';
+    updateDisplay();
+    return;
+  }
+  if (isOperator && lastIsOperator) {
+    expression = expression.slice(0, -1) + val;
+    updateDisplay();
+    return;
+  }
+  if (isOperator && hasResult) {
+    hasResult = false;
+  }
+
+  expression += val;
+  updateDisplay();
+  saveState();
+}
+
+function sciInput(val) {
+  if (hasResult) expression = getDisplayResult();
+  hasResult = false;
+  if (val === '(' ) {
+    expression += '(';
+  } else {
+    expression += val;
+  }
+  updateDisplay();
+  saveState();
+}
+
+function clearAll() {
+  expression = '';
+  hasResult = false;
+  updateDisplay(true);
+  saveState();
+}
+
+function backspace() {
+  if (hasResult) { clearAll(); return; }
+  expression = expression.slice(0, -1);
+  updateDisplay();
+  saveState();
+}
+
+function calculate() {
+  if (!expression) return;
+  const expr = expression;
+  try {
+    // Sanitize: allow only math-safe chars
+    const safe = expression
+      .replace(/×/g, '*')
+      .replace(/÷/g, '/')
+      .replace(/−/g, '-');
+
+    // eslint-disable-next-line no-new-func
+    const raw = Function('"use strict"; return (' + safe + ')')();
+    if (raw === undefined || isNaN(raw) || !isFinite(raw)) {
+      showError();
+      return;
+    }
+    const formatted = formatNumber(raw);
+    addToHistory(expr, formatted);
+    expression = String(raw);
+    hasResult = true;
+    updateDisplay(false, formatted);
+    animateResult();
+    saveState();
+  } catch(e) {
+    showError();
+  }
+}
+
+function formatNumber(n) {
+  if (Math.abs(n) >= 1e15 || (Math.abs(n) < 1e-6 && n !== 0)) {
+    return n.toExponential(4);
+  }
+  const s = parseFloat(n.toPrecision(12));
+  return String(s);
+}
+
+function getDisplayResult() {
+  return document.getElementById('result').textContent;
+}
+
+function showError() {
+  const r = document.getElementById('result');
+  r.textContent = 'Error';
+  r.style.color = 'rgba(255,255,255,0.6)';
+  setTimeout(() => {
+    r.style.color = '#ffffff';
+    expression = '';
+    updateDisplay();
+  }, 1400);
+}
+
+// ── DISPLAY ─────────────────────────────────────────────────────
+function updateDisplay(clear = false, overrideResult = null) {
+  const exprEl = document.getElementById('expression');
+  const resultEl = document.getElementById('result');
+
+  if (clear) {
+    exprEl.textContent = '';
+    resultEl.textContent = '0';
+    return;
+  }
+
+  if (overrideResult !== null) {
+    exprEl.textContent = formatExpr(expression.slice(0, -String(Function('"use strict";return(' + expression.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-') + ')')()).length) || formatExpr(expression));
+    resultEl.textContent = overrideResult;
+    return;
+  }
+
+  if (!expression) {
+    exprEl.textContent = '';
+    resultEl.textContent = '0';
+    return;
+  }
+
+  // Live preview
+  try {
+    const safe = expression.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-');
+    const raw = Function('"use strict"; return (' + safe + ')')();
+    if (typeof raw === 'number' && isFinite(raw) && !isNaN(raw)) {
+      exprEl.textContent = formatExpr(expression);
+      resultEl.textContent = '= ' + formatNumber(raw);
+    } else { throw new Error(); }
+  } catch(e) {
+    exprEl.textContent = formatExpr(expression);
+    resultEl.textContent = expression ? expression.slice(-1) : '0';
+  }
+
+  // Adjust font size
+  const len = resultEl.textContent.length;
+  if (len > 12) resultEl.style.fontSize = '36px';
+  else if (len > 9) resultEl.style.fontSize = '46px';
+  else if (len > 6) resultEl.style.fontSize = '54px';
+  else resultEl.style.fontSize = '64px';
+}
+
+function formatExpr(e) {
+  return e.replace(/\*/g,'×').replace(/\//g,'÷');
+}
+
+function animateResult() {
+  const r = document.getElementById('result');
+  r.classList.remove('animate-in');
+  void r.offsetWidth;
+  r.classList.add('animate-in');
+}
+
+// ── HISTORY ─────────────────────────────────────────────────────
+function addToHistory(expr, result) {
+  history.unshift({ expr: formatExpr(expr), result, time: Date.now() });
+  if (history.length > 50) history.pop();
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (!history.length) {
+    list.innerHTML = `<div class="history-empty">
+      <span class="history-empty-icon">◈</span>
+      No calculations yet.<br>Start calculating!
+    </div>`;
+    return;
+  }
+  list.innerHTML = history.map((h, i) => `
+    <div class="history-item" onclick="recallHistory(${i})">
+      <div class="history-expr">${h.expr}</div>
+      <div class="history-res">${h.result}</div>
+    </div>
+  `).join('');
+}
+
+function recallHistory(idx) {
+  expression = history[idx].result;
+  hasResult = true;
+  updateDisplay(false, history[idx].result);
+  toggleHistory();
+  saveState();
+}
+
+function clearHistory() {
+  history = [];
+  renderHistory();
+  saveState();
+}
+
+function toggleHistory() {
+  const panel = document.getElementById('historyPanel');
+  const isOpen = panel.classList.contains('open');
+  if (!isOpen) renderHistory();
+  panel.classList.toggle('open');
+}
+
+document.getElementById('historyBtn').addEventListener('click', toggleHistory);
+
+// Close history on swipe right
+let touchStartX = 0;
+document.getElementById('historyPanel').addEventListener('touchstart', e => {
+  touchStartX = e.changedTouches[0].screenX;
+});
+document.getElementById('historyPanel').addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].screenX - touchStartX;
+  if (dx > 60) toggleHistory();
+});
+
+// ── THEME ────────────────────────────────────────────────────────
+function applyTheme(dark, save = true) {
+  isDark = dark;
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : '');
+  document.querySelector('meta[name="theme-color"]').content = dark ? '#1E1E2A' : '#EAEAF0';
+  const icon = document.getElementById('themeIcon');
+  if (dark) {
+    icon.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+  } else {
+    icon.innerHTML = `<circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`;
+  }
+  if (save) saveState();
+}
+
+document.getElementById('themeBtn').addEventListener('click', () => applyTheme(!isDark));
+
+// Auto dark mode
+const mq = window.matchMedia('(prefers-color-scheme: dark)');
+if (!localStorage.getItem('calcul_state')) {
+  applyTheme(mq.matches, false);
+}
+mq.addEventListener('change', e => {
+  if (!localStorage.getItem('calcul_state')) applyTheme(e.matches, false);
+});
+
+// ── MODE ─────────────────────────────────────────────────────────
+function switchMode(mode) {
+  currentMode = mode;
+  document.getElementById('basicTab').classList.toggle('active', mode === 'basic');
+  document.getElementById('sciTab').classList.toggle('active', mode === 'sci');
+  const sciKeypad = document.getElementById('sciKeypad');
+  sciKeypad.style.display = mode === 'sci' ? 'grid' : 'none';
+}
+
+// ── KEYBOARD SUPPORT ─────────────────────────────────────────────
+window.addEventListener('keydown', e => {
+  const key = e.key;
+  if ('0123456789'.includes(key)) input(key);
+  else if (key === '+') input('+');
+  else if (key === '-') input('-');
+  else if (key === '*') input('*');
+  else if (key === '/') { e.preventDefault(); input('/'); }
+  else if (key === '%') input('%');
+  else if (key === '.') input('.');
+  else if (key === 'Enter' || key === '=') calculate();
+  else if (key === 'Backspace') backspace();
+  else if (key === 'Escape') clearAll();
+  else if (key === 'h' || key === 'H') toggleHistory();
+});
+
+// ── SWIPE TO CLEAR ───────────────────────────────────────────────
+let displayTouchStartX = 0;
+document.getElementById('display').addEventListener('touchstart', e => {
+  displayTouchStartX = e.changedTouches[0].screenX;
+});
+document.getElementById('display').addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].screenX - displayTouchStartX;
+  if (dx < -60) backspace();
+  if (dx > 80) clearAll();
+});
+
+// ── RIPPLE EFFECT ─────────────────────────────────────────────────
+document.querySelectorAll('.btn').forEach(btn => {
+  btn.addEventListener('click', function(e) {
+    const rect = this.getBoundingClientRect();
+    const ripple = document.createElement('span');
+    ripple.classList.add('ripple');
+    const size = Math.max(rect.width, rect.height);
+    ripple.style.width = ripple.style.height = size * 0.6 + 'px';
+    ripple.style.left = (e.clientX - rect.left - size * 0.3) + 'px';
+    ripple.style.top = (e.clientY - rect.top - size * 0.3) + 'px';
+    this.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 500);
+  });
+});
+
+// ── PWA / INSTALL ────────────────────────────────────────────────
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  setTimeout(() => {
+    const banner = document.getElementById('installBanner');
+    banner.classList.add('show');
+  }, 3000);
+});
+
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+  }
+  document.getElementById('installBanner').classList.remove('show');
+});
+
+document.getElementById('dismissInstall').addEventListener('click', () => {
+  document.getElementById('installBanner').classList.remove('show');
+});
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('installBanner').classList.remove('show');
+});
+
+// ── SERVICE WORKER ────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  const swContent = `
+const CACHE = 'calcul-v1';
+self.addEventListener('install', e => {
+  self.skipWaiting();
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(clients.claim());
+});
+self.addEventListener('fetch', e => {
+  e.respondWith(
+    caches.match(e.request).then(r => r || fetch(e.request).catch(() => new Response('Offline')))
+  );
+});
+  `.trim();
+  const blob = new Blob([swContent], { type: 'application/javascript' });
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(() => {});
+}
+</script>
+</body>
+</html>
